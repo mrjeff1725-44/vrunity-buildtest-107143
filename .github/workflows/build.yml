@@ -14,12 +14,13 @@ jobs:
           java-version: '17'
       - name: Android SDK
         run: |
-          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
-          echo "Using SDK at $SDK"
+          SDK="$ANDROID_HOME"
+          if [ -z "$SDK" ]; then SDK=/usr/local/lib/android/sdk; fi
+          echo "Using Android SDK at $SDK"
           echo "sdk.dir=$SDK" > local.properties
           (yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1) || true
           ("$SDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1) || true
-      - name: Gradle
+      - name: Get Gradle
         run: |
           curl -sL https://services.gradle.org/distributions/gradle-8.2-bin.zip -o /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d "$HOME/gradle"
@@ -30,7 +31,7 @@ jobs:
       - name: Download Three.js into assets
         run: curl -sL https://cdn.jsdelivr.net/npm/three@0.171.0/build/three.min.js -o app/src/main/assets/three.min.js
       - name: Build APK
-        run: "$HOME/gradle/gradle-8.2/bin/gradle" assembleDebug --no-daemon
+        run: $HOME/gradle/gradle-8.2/bin/gradle assembleDebug --no-daemon
       - name: Upload APK (artifact)
         uses: actions/upload-artifact@v4
         with:
