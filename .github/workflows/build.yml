@@ -1,0 +1,26 @@
+name: Build APK
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android platform
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0" > /dev/null || true
+      - name: Point the app at its live scene
+        run: |
+          sed -i "s|__SCENE_URL__|https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/|" app/src/main/res/values/config.xml
+          cat app/src/main/res/values/config.xml
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
+      - name: Build APK
+        run: gradle assembleDebug --no-daemon
